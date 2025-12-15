@@ -1,0 +1,6 @@
+pydantic-settings
+pydantic
+alembic
+psycopg2-binary
+sqlalchemy
+
