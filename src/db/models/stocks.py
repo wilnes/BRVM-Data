@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import Integer, String, ForeignKey, Date, Enum as SQLEnum
 from sqlalchemy.orm import relationship, mapped_column
 from db.base import Base
-from models.enums import CountryEnum
+from models.enums import CountryEnum, StatusEnum
 
 
 class Company(Base):
@@ -16,7 +16,7 @@ class Company(Base):
     company_id: int = mapped_column(Integer, primary_key=True)
     company_name: str = mapped_column(String(255), nullable=False)
     country: CountryEnum = mapped_column(SQLEnum(CountryEnum), nullable=False)
-    status: str = mapped_column(String(50), nullable=False)
+    status: StatusEnum = mapped_column(SQLEnum(StatusEnum), nullable=False)
     created_at: datetime = mapped_column()
     updated_at: datetime = mapped_column()
 
