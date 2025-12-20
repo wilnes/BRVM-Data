@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.12-slim
+FROM python:3.12-alpine
 
 # Buffering stdout
 ENV PYTHONUNBUFFERED=1
@@ -7,39 +7,24 @@ ENV PYTHONUNBUFFERED=1
 # Set working directory
 WORKDIR /app
 
-# System dependencies (important for pyscopg2)
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy dependency files
-COPY requirements.txt /tmp/requirements.txt
-COPY requirements.dev.txt /tmp/requirements.dev.txt
+COPY requirements.txt  .
 
+# Install system dependencies (including Postgres client)
+RUN apk add --no-cache gcc libpq-dev postgresql-client
 
-
-# System dependencies (important for pyscopg2)
-ARG DEV=false
-RUN apk add --no-cache --virtual .build-deps \
-        gcc \
-        musl-dev \
-        libffi-dev \
-        postgresql-dev && \
-    python -m venv /py && \
-    /py/bin/pip install --upgrade pip && \
-    /py/bin/pip install -r /tmp/requirements.txt && \
-    if [ "$DEV" = "true" ]; then \
-        /py/bin/pip install -r /tmp/requirements.dev.txt ; \
-    fi && \
-    rm -rf /tmp 
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Create non-root user
 RUN adduser --disabled-password --no-create-home app-user
 
 
 # Copy project source
-COPY src/ ./src
+COPY . .
+
+# Scripts enable
+RUN chmod +x /app/scripts/wait_for_db.sh
 
 # Environment variables
 ENV PYTHONPATH=/app
