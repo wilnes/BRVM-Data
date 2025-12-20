@@ -2,41 +2,31 @@
 App settings
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
-    # PostgreSQL
-    postgres_db: str = Field(..., env="POSTGRES_DB")
-    postgres_user: str = Field(..., env="POSTGRES_USER")
-    postgres_password: str = Field(..., env="POSTGRES_PASSWORD")
-    postgres_host: str = Field("db", env="POSTGRES_HOST")
-    postgres_port: int = Field(5432, env="POSTGRES_PORT")
-
-    # SQLite in-memory URL for tests
-    test_database_url: str = "sqlite+pysqlite:///:memory:"
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / ".env", env_file_encoding="utf-8", extra="ignore"
+    )
+    # === Database ===
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    SQLITE_TEST_DATABASE_URI: str
 
     @property
-    def database_url(self) -> str:
-        """Manual creation of db url"""
-        if self.database_url:
-            return self.database_url
+    def POSTGRESQL_DATABASE_URI(self) -> str:
         return (
-            f"postgresql+psycopg2://{self.postgres_user}:"
-            f"{self.postgres_password}@{self.postgres_host}:"
-            f"{self.postgres_port}/{self.postgres_db}"
+            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
-
-    @property
-    def test_db_url(self) -> str:
-        """Returns the in-memory SQLite DB URL for testing."""
-        return self.test_database_url
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
 
 # Instantiate a global settings object
-settings = Settings()
+settings = Settings()  # type: ignore

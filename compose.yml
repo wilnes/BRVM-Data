@@ -1,28 +1,33 @@
 services:
-  db:
-    image: postgres:16
+  app:
+    build:
+      context: .
+      args:
+        - DEV=true
+    env_file: .env
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    command: sh -c "/app/scripts/wait_for_db.sh db && python main.py"
+
+  postgres_db:
+    image: postgres:17-alpine
     container_name: brvm_postgres_db
     env_file:
       - .env
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
-      - "${POSTGRES_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-  app:
-    build: .
-    container_name: brvm_app
-    depends_on:
-      - db
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    volumes:
-      - .:/app
+      - "5432:5432"
 
 volumes:
-  postgres_data:
+  postgres-data:
