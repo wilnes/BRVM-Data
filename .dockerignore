@@ -1,10 +1,103 @@
+# ======================================
+# 🐍 PYTHON / FASTAPI
+# ======================================
+
+# Virtual environment
+venv/
+.pytest_cache/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+
+# ======================================
+# ⚙️ CONFIG & ENVIRONMENT
+# ======================================
+
+# Local environment files
 .env
-.git
-.gitignore
-.alembic
-notebooks/
+.env.local
+.env.*
+!.env.example  # keep sample env file
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ======================================
+# 🐳 DOCKER & COMPOSE
+# ======================================
+
+# Docker build context files
+.dockerignore
+docker-compose*.yml
+
+# Local build and packaging artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# ======================================
+# 🧪 TESTS (not needed inside image)
+# ======================================
+
 tests/
+.coverage
+htmlcov/
+.tox/
+.nox/
+pytest_cache/
+
+# ======================================
+# 📦 DEPENDENCIES / INSTALLATION CACHE
+# ======================================
+
+pip-wheel-metadata/
+*.whl
+*.egg
+*.manifest
+*.spec
+
+# ======================================
+# 🧾 LOGGING & RUNTIME FILES
+# ======================================
+
+logs/
+*.log
+tmp/
+run/
+celerybeat-schedule
+celerybeat.pid
+
+# ======================================
+# 📧 EMAIL / DEBUG FILES
+# ======================================
+
+mail_logs/
+mail_debug/
+
+# ======================================
+# 🧰 SYSTEM FILES
+# ======================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ======================================
+# 🧩 MIGRATIONS (optional)
+# ======================================
+
+# Uncomment if you run Alembic migrations externally and not from inside the container:
+# alembic/
+# alembic.ini
+
+# ======================================
+# 🧠 PROJECT DOCS & DEV FILES
+# ======================================
+
+README.md
+docs/
+notebooks/
