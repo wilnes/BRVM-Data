@@ -5,7 +5,7 @@ Data model for stocks
 from datetime import datetime
 from sqlalchemy import Integer, String, ForeignKey, Date, Enum as SQLEnum
 from sqlalchemy.orm import relationship, mapped_column
-from db.base import Base
+from db.base_class import Base
 from models.enums import CountryEnum, StatusEnum
 
 

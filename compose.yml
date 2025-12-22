@@ -6,7 +6,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,7 +20,8 @@ services:
       - .env
     volumes:
       - .:/app
-    entrypoint: ["/app/scripts/wait_for_db.sh", "db", "python", "main.py"]
+    command: >
+      sh -c "/app/scripts/wait_for_db.sh db && alembic upgrade head && python main.py "
 
 volumes:
   postgres-data:

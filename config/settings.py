@@ -4,6 +4,7 @@ App settings
 
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -23,10 +24,16 @@ class Settings(BaseSettings):
     @property
     def POSTGRESQL_DATABASE_URI(self) -> str:
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql+psycopg2://"
+            f"{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_HOST}:"
+            f"{self.POSTGRES_PORT}/"
+            f"{self.POSTGRES_DB}"
         )
 
 
 # Instantiate a global settings object
-settings = Settings()  # type: ignore
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

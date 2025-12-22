@@ -1,9 +1,8 @@
 """
-Database setup
+base.py
 """
 
-from sqlalchemy.orm import declarative_base
+# Import all the models so Base has them before alembic
+# import thems
 
-# Base model
-
-Base = declarative_base()
+from db.base_class import Base

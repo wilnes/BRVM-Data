@@ -1,4 +1,3 @@
-from models import Base
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -6,19 +5,20 @@ from sqlalchemy import pool
 
 from alembic import context
 
-import os
-from dotenv import load_dotenv
 
-load_dotenv()  # Reads .env
+from db.base import Base
+from config.settings import get_settings
 
 
+# Settings from pydantic
+settings = get_settings()
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 # Override the SQLAlchemy URL with DATABASE_URL from env
-DATABASE_URL = os.getenv("DATABASE_URL")
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
+config.set_main_option("sqlalchemy.url", settings.POSTGRESQL_DATABASE_URI)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
