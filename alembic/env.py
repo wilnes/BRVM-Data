@@ -18,7 +18,7 @@ config = context.config
 
 # Override the SQLAlchemy URL with DATABASE_URL from env
 
-config.set_main_option("sqlalchemy.url", settings.POSTGRESQL_DATABASE_URI)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

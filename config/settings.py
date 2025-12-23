@@ -3,26 +3,29 @@ App settings
 """
 
 from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
+from pydantic import Field
 from functools import lru_cache
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=BASE_DIR / ".env", env_file_encoding="utf-8", extra="ignore"
-    )
+
+    # === Environment ===
+    ENV: str = Field(default="dev")
     # === Database ===
     POSTGRES_HOST: str
     POSTGRES_PORT: int
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    SQLITE_TEST_DATABASE_URI: str
+    SQLITE_TEST_DATABASE_URI: str = "sqlite:///test.db"
 
     @property
-    def POSTGRESQL_DATABASE_URI(self) -> str:
+    def DATABASE_URL(self) -> str:
+        if self.ENV == "test":
+            return self.SQLITE_TEST_DATABASE_URI
         return (
             f"postgresql+psycopg2://"
             f"{self.POSTGRES_USER}:"
@@ -32,8 +35,12 @@ class Settings(BaseSettings):
             f"{self.POSTGRES_DB}"
         )
 
+    class Config:
+        env_file = ".env"
 
 # Instantiate a global settings object
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
