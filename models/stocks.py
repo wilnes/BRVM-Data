@@ -2,7 +2,7 @@
 Data model for stocks
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import (Integer, String, ForeignKey,
                         Date, Enum as SQLEnum, func, DateTime)
 from sqlalchemy.orm import relationship, mapped_column, Mapped, Session
@@ -62,7 +62,7 @@ class Equity(Base):
     ticker: Mapped[str] = mapped_column(
         String(50), nullable=False, unique=True)
     isin: Mapped[str] = mapped_column(String(50))
-    listing_date: Mapped[Date] = mapped_column(Date)
+    listing_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     trading_status: Mapped[str] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False

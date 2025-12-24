@@ -4,38 +4,33 @@ Configuration for all tests
 
 
 import pytest
-from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from db.base import Base
+from db.base import Base  # replace with your actual Base
+
+# Use an in-memory SQLite database for fast tests
+TEST_DATABASE_URL = "sqlite:///:memory:"
+
+engine = create_engine(TEST_DATABASE_URL)
+TestingSessionLocal = sessionmaker(bind=engine)
 
 
-# SQLite in-memory database (FAST)
-SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
-
-
-@pytest.fixture(scope="session")
-def engine():
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-    )
+@pytest.fixture(scope="session", autouse=True)
+def create_test_database():
     Base.metadata.create_all(bind=engine)
-    yield engine
+    yield
     Base.metadata.drop_all(bind=engine)
-    engine.dispose()
 
 
 @pytest.fixture(scope="function")
-def db(engine) -> Generator:
+def db():
     connection = engine.connect()
     transaction = connection.begin()
-
-    Session = sessionmaker(bind=connection)
-    session = Session()
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    session = TestingSessionLocal(bind=connection)
+    try:
+        yield session
+    finally:
+        session.close()
+        if transaction.is_active:
+            transaction.rollback()  # only rollback if still active
+        connection.close()
