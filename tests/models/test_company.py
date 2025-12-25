@@ -1,4 +1,4 @@
-"""Test stocks models."""
+"""Test company model"""
 
 import pytest
 from models.stocks import Company
