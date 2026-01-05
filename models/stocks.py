@@ -37,7 +37,7 @@ class Company(Base):
         nullable=False
     )
     # relationships
-    equities = relationship("Equity", back_populates="company")
+    equities: Mapped[list["Equity"]] = relationship("Equity", back_populates="company")
 
     @classmethod
     def create(cls, db: Session, **kwargs):
@@ -82,7 +82,10 @@ class Equity(Base):
     )
 
     # relationships
-    company = relationship("Company", back_populates="equities")
+    company: Mapped["Company"] = relationship("Company", back_populates="equities")
+    eod_prices: Mapped[list["EquityEODPrice"]] = relationship(  # type:ignore
+        "EquityEODPrice", back_populates="equity"
+    )
 
     @classmethod
     def create(cls, db: Session, **kwargs):
