@@ -24,14 +24,17 @@ class Company(Base):
     # attributes
     company_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    country: Mapped[CountryEnum] = mapped_column(SQLEnum(CountryEnum), nullable=False)
-    status: Mapped[StatusEnum] = mapped_column(SQLEnum(StatusEnum), nullable=False)
+    country: Mapped[CountryEnum] = mapped_column(
+        SQLEnum(CountryEnum), nullable=False)
+    status: Mapped[StatusEnum] = mapped_column(
+        SQLEnum(StatusEnum), nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+        DateTime, server_default=func.now(), onupdate=func.now(),
+        nullable=False
     )
     # relationships
     equities = relationship("Equity", back_populates="company")
@@ -42,7 +45,8 @@ class Company(Base):
         company_name = kwargs.get("company_name")
         existing = db.query(cls).filter_by(company_name=company_name).first()
         if existing:
-            raise ValueError(f"Company with name '{company_name}' already exists")
+            raise ValueError(
+                f"Company with name '{company_name}' already exists")
 
         # add status to kwargs if not provided
         if "status" not in kwargs:
@@ -63,7 +67,8 @@ class Equity(Base):
     company_id: Mapped[int] = mapped_column(
         ForeignKey("companies.company_id"), nullable=False
     )
-    ticker: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    ticker: Mapped[str] = mapped_column(
+        String(50), nullable=False, unique=True)
     isin: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     listing_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     trading_status: Mapped[TradingStatusEnum] = mapped_column(
