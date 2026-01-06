@@ -9,15 +9,14 @@ from sqlalchemy import (
     String,
     ForeignKey,
     Date,
-    Enum as SQLEnum,
     func,
     DateTime,
     Float,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship, mapped_column, Mapped, Session
 
 from db.base_class import Base
-from models.enums import StatusEnum
 
 
 class TradingDay(Base):
@@ -29,11 +28,17 @@ class TradingDay(Base):
     is_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     note: Mapped[str] = mapped_column(String(255), nullable=True)
 
+    # timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    # relationships
+    residual_quantities: Mapped[list["EquityResidualQuantity"]] = relationship(
+        "EquityResidualQuantity", back_populates="trading_day"
     )
     eod_prices: Mapped[list["EquityEODPrice"]] = relationship(
         "EquityEODPrice", back_populates="trading_day"
@@ -123,6 +128,18 @@ class EquityEODPrice(Base):
             raise ValueError(
                 f"EOD price for equity_id '{equity_id}' on date '{trading_date}' already exists"
             )
+        # --- Automatically derive full_data_flag ---
+        ohlcv_fields = [
+            "open_price",
+            "high_price",
+            "low_price",
+            "close_price",
+            "volume",
+        ]
+
+        kwargs["full_data_flag"] = all(
+            kwargs.get(field) is not None for field in ohlcv_fields
+        )
 
         # Create new record
         eod_price = cls(**kwargs)
@@ -130,3 +147,74 @@ class EquityEODPrice(Base):
         db.commit()
         db.refresh(eod_price)
         return eod_price
+
+
+class EquityResidualQuantity(Base):
+    __tablename__ = "equity_residual_quantities"
+
+    residual_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    equity_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("equities.equity_id"), nullable=False
+    )
+    trading_date: Mapped[date] = mapped_column(
+        Date, ForeignKey("trading_days.trading_date"), nullable=False
+    )
+    buy_price: Mapped[float] = mapped_column(Float, nullable=True)
+    sell_price: Mapped[float] = mapped_column(Float, nullable=True)
+    buy_quantity: Mapped[int] = mapped_column(Integer, nullable=True)
+    sell_quantity: Mapped[int] = mapped_column(Integer, nullable=True)
+    data_source: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    # Realtionships
+    trading_day: Mapped["TradingDay"] = relationship(
+        "TradingDay", back_populates="residual_quantities"
+    )
+    equity: Mapped["Equity"] = relationship(  # type:ignore
+        "Equity", back_populates="residual_quantities"
+    )
+
+    @classmethod
+    def create(cls, db: Session, **kwargs):
+        """
+        Create a new residual quantity record if it doesn't exist. Returns the instance.
+        """
+        equity_id = kwargs.get("equity_id")
+        trading_date = kwargs.get("trading_date")
+
+        if equity_id is None or trading_date is None:
+            raise ValueError("Both 'equity_id' and 'trading_date' are required")
+
+        existing = (
+            db.query(cls)
+            .filter_by(equity_id=equity_id, trading_date=trading_date)
+            .first()
+        )
+        if existing:
+            raise ValueError(
+                f"Residual quantity for equity_id '{equity_id}' on date '{trading_date}' already exists"
+            )
+
+        buy_qty = kwargs.get("buy_quantity")
+        sell_qty = kwargs.get("sell_quantity")
+
+        # Validation
+        if buy_qty and kwargs.get("buy_price") is None:
+            raise ValueError("buy_price is required when buy_quantity is provided")
+
+        if sell_qty and kwargs.get("sell_price") is None:
+            raise ValueError("sell_price is required when sell_quantity is provided")
+
+        residual_quantity = cls(**kwargs)
+        db.add(residual_quantity)
+        db.commit()
+        db.refresh(residual_quantity)
+        return residual_quantity
